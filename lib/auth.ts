@@ -1,3 +1,4 @@
+import { randomBytes } from "node:crypto";
 import bcrypt from "bcryptjs";
 import { SignJWT, jwtVerify } from "jose";
 import { cookies } from "next/headers";
@@ -12,11 +13,27 @@ export type SessionUser = {
   role: "user" | "admin";
 };
 
+/** In-memory only — never a fixed string shipped in source. */
+let ephemeralSecret: Uint8Array | undefined;
+
 function secretKey() {
-  const secret =
-    process.env.SESSION_SECRET?.trim() ||
-    "fenixrp-local-dev-only-change-me-in-prod";
-  return new TextEncoder().encode(secret);
+  const fromEnv = process.env.SESSION_SECRET?.trim();
+  if (fromEnv) {
+    return new TextEncoder().encode(fromEnv);
+  }
+
+  const hasDatabaseUrl = Boolean(process.env.DATABASE_URL?.trim());
+  const allowEphemeral =
+    process.env.NODE_ENV !== "production" && !hasDatabaseUrl;
+
+  if (allowEphemeral) {
+    ephemeralSecret ??= randomBytes(32);
+    return ephemeralSecret;
+  }
+
+  throw new Error(
+    "SESSION_SECRET is required. Set it in the environment before starting the app.",
+  );
 }
 
 export async function hashPassword(password: string) {
@@ -112,13 +129,24 @@ export async function findUserByUsername(username: string) {
   return rows[0] ?? null;
 }
 
-export async function createUser(username: string, password: string) {
+export async function countUsers() {
+  const rows = await sql<{ count: number }>(
+    "select count(*)::int as count from users",
+  );
+  return rows[0]?.count ?? 0;
+}
+
+export async function createUser(
+  username: string,
+  password: string,
+  role: "user" | "admin" = "user",
+) {
   const passwordHash = await hashPassword(password);
   const rows = await sql<{ id: number; username: string; role: "user" | "admin" }>(
     `insert into users (username, password_hash, role)
-     values ($1, $2, 'user')
+     values ($1, $2, $3)
      returning id, username, role`,
-    [username, passwordHash],
+    [username, passwordHash, role],
   );
   return rows[0];
 }

@@ -33,7 +33,9 @@ export function LoginForm({
       setLocalError(data.error || "Не удалось войти");
       return;
     }
-    router.push(nextPath);
+    const safeNext =
+      nextPath.startsWith("/") && !nextPath.startsWith("//") ? nextPath : "/forum";
+    router.push(safeNext);
     router.refresh();
   }
 

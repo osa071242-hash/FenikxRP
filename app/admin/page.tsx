@@ -27,10 +27,7 @@ export default async function AdminPage() {
       <div className="shell">
         <div className="section-head">
           <h2>Админ-панель</h2>
-          <p>
-            Управление каталогами, постами и текстами сайта. Демо: admin /
-            admin123 — смените пароль.
-          </p>
+          <p>Управление каталогами, постами и текстами сайта.</p>
         </div>
         <AdminPanel
           categories={categories}

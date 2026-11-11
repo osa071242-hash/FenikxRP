@@ -1,6 +1,11 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
-import { createSession, createUser, findUserByUsername } from "@/lib/auth";
+import {
+  countUsers,
+  createSession,
+  createUser,
+  findUserByUsername,
+} from "@/lib/auth";
 import { passwordSchema, usernameSchema } from "@/lib/validation";
 
 const schema = z.object({
@@ -18,7 +23,9 @@ export async function POST(req: Request) {
         { status: 409 },
       );
     }
-    const user = await createUser(body.username, body.password);
+    // Production bootstrap: first account becomes admin (no default password).
+    const role = (await countUsers()) === 0 ? "admin" : "user";
+    const user = await createUser(body.username, body.password, role);
     await createSession(user);
     return NextResponse.json({ ok: true });
   } catch (error) {

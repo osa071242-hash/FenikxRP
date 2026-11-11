@@ -25,7 +25,10 @@ export default async function LoginPage({
         </div>
         <div className="panel">
           <LoginForm nextPath={params.next || "/forum"} error={params.error} />
-          {texts.demo_note ? <p className="demo-note">{texts.demo_note}</p> : null}
+          {texts.demo_note &&
+          !/admin\s*\/|admin123/i.test(texts.demo_note) ? (
+            <p className="demo-note">{texts.demo_note}</p>
+          ) : null}
           <p style={{ marginTop: "1rem", color: "var(--muted)" }}>
             Нет аккаунта? <Link href="/register">Регистрация</Link>
           </p>

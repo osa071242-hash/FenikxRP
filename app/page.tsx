@@ -32,7 +32,10 @@ export default async function HomePage() {
               О проекте
             </Link>
           </div>
-          {texts.demo_note ? <p className="demo-note">{texts.demo_note}</p> : null}
+          {texts.demo_note &&
+          !/admin\s*\/|admin123/i.test(texts.demo_note) ? (
+            <p className="demo-note">{texts.demo_note}</p>
+          ) : null}
         </div>
       </section>
 
